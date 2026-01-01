@@ -156,4 +156,3 @@ O tema dark pode ser personalizado editando:
 ## 📄 Licença
 
 MIT
-
