@@ -1,0 +1,157 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-900 text-gray-100;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors;
+  }
+  
+  .btn-danger {
+    @apply bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors;
+  }
+  
+  .card {
+    @apply bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700;
+  }
+  
+  .input {
+    @apply bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+  }
+  
+  /* Folder colors - ensure Tailwind generates these classes */
+  .folder-yellow { @apply text-yellow-400; }
+  .folder-blue { @apply text-blue-400; }
+  .folder-green { @apply text-green-400; }
+  .folder-purple { @apply text-purple-400; }
+  .folder-pink { @apply text-pink-400; }
+  .folder-red { @apply text-red-400; }
+  .folder-indigo { @apply text-indigo-400; }
+  .folder-cyan { @apply text-cyan-400; }
+  
+  /* Alert animations */
+  .alert-show {
+    @apply opacity-100 translate-x-0;
+  }
+  
+  .alert-hide {
+    @apply opacity-0 translate-x-full;
+  }
+  
+  /* Mobile Enhancements - Não afeta desktop */
+  @media (max-width: 640px) {
+    /* Botões maiores para toque */
+    .mobile-device .btn-primary,
+    .mobile-device .btn-secondary,
+    .mobile-device .btn-danger {
+      @apply min-h-[44px] min-w-[44px] px-4 py-3 text-base;
+      @apply active:scale-95;
+    }
+    
+    .mobile-device .touch-active {
+      @apply opacity-75 scale-95;
+    }
+    
+    /* Melhor espaçamento em mobile */
+    .mobile-device main {
+      @apply px-3 py-4;
+    }
+    
+    /* Cards menores em mobile */
+    .mobile-device .card {
+      @apply p-4;
+    }
+    
+    /* Inputs maiores em mobile */
+    .mobile-device .input {
+      @apply py-3 text-base;
+    }
+    
+    /* Títulos menores em mobile */
+    .mobile-device h1 {
+      @apply text-2xl;
+    }
+    
+    .mobile-device h2 {
+      @apply text-xl;
+    }
+    
+    /* Grid de arquivos - 2 colunas em mobile */
+    .mobile-device #filesContainer {
+      @apply grid-cols-2 gap-3;
+    }
+    
+    /* Cards de arquivo menores */
+    .mobile-device .file-card {
+      @apply p-3;
+    }
+    
+    /* Modais full screen em mobile */
+    .mobile-device .modal-content {
+      @apply w-full max-w-full h-full max-h-full rounded-none m-0;
+    }
+    
+    /* Navegação mobile */
+    .mobile-device nav {
+      @apply px-2;
+    }
+    
+    .mobile-device nav .flex {
+      @apply flex-wrap gap-2;
+    }
+    
+    /* Breadcrumb mobile */
+    .mobile-device #breadcrumb {
+      @apply text-xs overflow-x-auto pb-2;
+      @apply -mx-3 px-3;
+    }
+    
+    /* Busca mobile */
+    .mobile-device #searchInput {
+      @apply text-base py-3;
+    }
+  }
+  
+  /* Melhorias de toque */
+  .touch-active {
+    transition: transform 0.1s ease, opacity 0.1s ease;
+  }
+  
+  /* Melhorias gerais para telas pequenas */
+  @media (max-width: 640px) {
+    /* Espaçamento reduzido */
+    .sm\:px-6 {
+      @apply px-3;
+    }
+    
+    /* Textos responsivos */
+    .text-3xl {
+      font-size: 1.75rem;
+    }
+    
+    .text-4xl {
+      font-size: 2rem;
+    }
+    
+    /* Modais responsivos */
+    .modal {
+      @apply p-4;
+    }
+    
+    /* Grid responsivo */
+    .grid {
+      gap: 0.75rem;
+    }
+  }
+}
+

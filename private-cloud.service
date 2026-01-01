@@ -1,0 +1,35 @@
+[Unit]
+Description=Private Cloud - Servidor de nuvem privada
+After=network.target mysql.service
+Wants=mysql.service
+
+[Service]
+Type=simple
+User=othon
+Group=othon
+WorkingDirectory=/home/othon/private-cloud
+Environment="NODE_ENV=production"
+Environment="PATH=/usr/bin:/usr/local/bin:/home/othon/.local/bin"
+EnvironmentFile=-/home/othon/private-cloud/.env
+ExecStart=/usr/bin/node /home/othon/private-cloud/src/server.js
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=private-cloud
+
+# Configurações de segurança
+NoNewPrivileges=true
+PrivateTmp=false
+
+# Limites de recursos
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# Timeout para inicialização
+TimeoutStartSec=60
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target
+

@@ -1,0 +1,316 @@
+<div class="w-full">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex items-center mb-4">
+            <a href="/admin" class="text-gray-400 hover:text-white mr-4 transition-colors" title="Voltar ao painel">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+            </a>
+            <div class="flex-1">
+                <h1 class="text-3xl font-bold text-white">Métricas do Sistema</h1>
+                <p class="text-gray-400 mt-2">Monitoramento do Raspberry Pi em tempo real</p>
+            </div>
+            <button onclick="refreshMetrics()" class="btn-primary flex items-center" id="refreshBtn">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                Atualizar
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="text-center py-12">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
+        <p class="text-gray-400">Carregando métricas...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="errorState" class="hidden bg-red-900 bg-opacity-50 border border-red-500 rounded-lg p-6 mb-6">
+        <div class="flex items-center">
+            <svg class="w-6 h-6 text-red-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <div>
+                <h3 class="text-red-300 font-semibold">Erro ao carregar métricas</h3>
+                <p class="text-red-400 text-sm mt-1" id="errorMessage"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Metrics Content -->
+    <div id="metricsContent" class="hidden">
+        <!-- Temperature Card -->
+        <div class="bg-gray-800 rounded-lg border border-gray-700 p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-white flex items-center">
+                    <svg class="w-6 h-6 mr-2 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                    Temperatura
+                </h2>
+                <span class="text-sm text-gray-400" id="tempTimestamp"></span>
+            </div>
+            <div id="temperatureContent">
+                <div class="text-4xl font-bold text-white mb-2">
+                    <span id="tempCelsius">-</span>°C
+                </div>
+                <div class="text-gray-400">
+                    <span id="tempFahrenheit">-</span>°F
+                </div>
+            </div>
+        </div>
+
+        <!-- CPU and Memory Row -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <!-- CPU Card -->
+            <div class="bg-gray-800 rounded-lg border border-gray-700 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-white flex items-center">
+                        <svg class="w-6 h-6 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+                        </svg>
+                        Processador
+                    </h2>
+                </div>
+                <div id="cpuContent">
+                    <div class="text-4xl font-bold text-white mb-2">
+                        <span id="cpuUsage">-</span>%
+                    </div>
+                    <div class="text-gray-400 mb-4">
+                        <div>Núcleos: <span id="cpuCores" class="text-white">-</span></div>
+                        <div class="text-sm mt-1" id="cpuModel">-</div>
+                    </div>
+                    <div class="w-full bg-gray-700 rounded-full h-3">
+                        <div id="cpuBar" class="bg-blue-500 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Memory Card -->
+            <div class="bg-gray-800 rounded-lg border border-gray-700 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-white flex items-center">
+                        <svg class="w-6 h-6 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+                        </svg>
+                        Memória RAM
+                    </h2>
+                </div>
+                <div id="memoryContent">
+                    <div class="text-4xl font-bold text-white mb-2">
+                        <span id="memoryPercentage">-</span>%
+                    </div>
+                    <div class="text-gray-400 mb-4">
+                        <div>Usado: <span id="memoryUsed" class="text-white">-</span></div>
+                        <div>Livre: <span id="memoryFree" class="text-white">-</span></div>
+                        <div>Total: <span id="memoryTotal" class="text-white">-</span></div>
+                    </div>
+                    <div class="w-full bg-gray-700 rounded-full h-3">
+                        <div id="memoryBar" class="bg-green-500 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Storage Card -->
+        <div class="bg-gray-800 rounded-lg border border-gray-700 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-white flex items-center">
+                    <svg class="w-6 h-6 mr-2 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path>
+                    </svg>
+                    Armazenamento (HD Externo)
+                </h2>
+            </div>
+            <div id="storageContent">
+                <div class="text-4xl font-bold text-white mb-2">
+                    <span id="storagePercentage">-</span>%
+                </div>
+                <div class="text-gray-400 mb-4">
+                    <div>Usado: <span id="storageUsed" class="text-white">-</span></div>
+                    <div>Disponível: <span id="storageAvailable" class="text-white">-</span></div>
+                    <div>Total: <span id="storageTotal" class="text-white">-</span></div>
+                    <div class="text-sm mt-2 text-gray-500">
+                        Ponto de montagem: <span id="storageMount" class="text-gray-400">-</span>
+                    </div>
+                </div>
+                <div class="w-full bg-gray-700 rounded-full h-3">
+                    <div id="storageBar" class="bg-yellow-500 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Last Update -->
+        <div class="mt-6 text-center text-gray-400 text-sm">
+            Última atualização: <span id="lastUpdate">-</span>
+        </div>
+    </div>
+</div>
+
+<script>
+let autoRefreshInterval = null;
+
+async function loadMetrics() {
+    const loadingState = document.getElementById('loadingState');
+    const errorState = document.getElementById('errorState');
+    const errorMessage = document.getElementById('errorMessage');
+    const metricsContent = document.getElementById('metricsContent');
+    const refreshBtn = document.getElementById('refreshBtn');
+
+    try {
+        loadingState.classList.remove('hidden');
+        errorState.classList.add('hidden');
+        metricsContent.classList.add('hidden');
+        refreshBtn.disabled = true;
+
+        const response = await fetch('/admin/metrics/api', {
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error('Erro ao carregar métricas');
+        }
+
+        const data = await response.json();
+
+        if (!data.success || !data.metrics) {
+            throw new Error('Dados inválidos recebidos');
+        }
+
+        const metrics = data.metrics;
+
+        // Temperature
+        if (metrics.temperature && !metrics.temperature.error) {
+            document.getElementById('tempCelsius').textContent = metrics.temperature.celsius;
+            document.getElementById('tempFahrenheit').textContent = metrics.temperature.fahrenheit;
+        } else {
+            document.getElementById('tempCelsius').textContent = 'N/A';
+            document.getElementById('tempFahrenheit').textContent = 'N/A';
+        }
+
+        // CPU
+        if (metrics.cpu && metrics.cpu.usage !== null) {
+            const cpuUsage = parseFloat(metrics.cpu.usage);
+            document.getElementById('cpuUsage').textContent = cpuUsage.toFixed(1);
+            document.getElementById('cpuCores').textContent = metrics.cpu.cores;
+            document.getElementById('cpuModel').textContent = metrics.cpu.model;
+            document.getElementById('cpuBar').style.width = cpuUsage + '%';
+            
+            // Change color based on usage
+            const cpuBar = document.getElementById('cpuBar');
+            if (cpuUsage > 80) {
+                cpuBar.classList.remove('bg-blue-500', 'bg-yellow-500');
+                cpuBar.classList.add('bg-red-500');
+            } else if (cpuUsage > 50) {
+                cpuBar.classList.remove('bg-blue-500', 'bg-red-500');
+                cpuBar.classList.add('bg-yellow-500');
+            } else {
+                cpuBar.classList.remove('bg-yellow-500', 'bg-red-500');
+                cpuBar.classList.add('bg-blue-500');
+            }
+        } else {
+            document.getElementById('cpuUsage').textContent = 'N/A';
+            document.getElementById('cpuCores').textContent = '-';
+            document.getElementById('cpuModel').textContent = 'Não disponível';
+        }
+
+        // Memory
+        if (metrics.memory) {
+            const memPercentage = parseFloat(metrics.memory.percentage);
+            document.getElementById('memoryPercentage').textContent = memPercentage.toFixed(1);
+            document.getElementById('memoryUsed').textContent = metrics.memory.usedFormatted || '-';
+            document.getElementById('memoryFree').textContent = metrics.memory.freeFormatted || '-';
+            document.getElementById('memoryTotal').textContent = metrics.memory.totalFormatted || '-';
+            document.getElementById('memoryBar').style.width = memPercentage + '%';
+            
+            // Change color based on usage
+            const memoryBar = document.getElementById('memoryBar');
+            if (memPercentage > 80) {
+                memoryBar.classList.remove('bg-green-500', 'bg-yellow-500');
+                memoryBar.classList.add('bg-red-500');
+            } else if (memPercentage > 50) {
+                memoryBar.classList.remove('bg-green-500', 'bg-red-500');
+                memoryBar.classList.add('bg-yellow-500');
+            } else {
+                memoryBar.classList.remove('bg-yellow-500', 'bg-red-500');
+                memoryBar.classList.add('bg-green-500');
+            }
+        }
+
+        // Storage
+        if (metrics.storage && metrics.storage.external && !metrics.storage.external.error) {
+            const storagePercentage = parseFloat(metrics.storage.external.percentage);
+            document.getElementById('storagePercentage').textContent = storagePercentage.toFixed(1);
+            document.getElementById('storageUsed').textContent = metrics.storage.external.used || '-';
+            document.getElementById('storageAvailable').textContent = metrics.storage.external.available || '-';
+            document.getElementById('storageTotal').textContent = metrics.storage.external.total || '-';
+            document.getElementById('storageMount').textContent = metrics.storage.external.mountPoint || '-';
+            document.getElementById('storageBar').style.width = storagePercentage + '%';
+            
+            // Change color based on usage
+            const storageBar = document.getElementById('storageBar');
+            if (storagePercentage > 90) {
+                storageBar.classList.remove('bg-yellow-500', 'bg-orange-500');
+                storageBar.classList.add('bg-red-500');
+            } else if (storagePercentage > 75) {
+                storageBar.classList.remove('bg-yellow-500', 'bg-red-500');
+                storageBar.classList.add('bg-orange-500');
+            } else {
+                storageBar.classList.remove('bg-orange-500', 'bg-red-500');
+                storageBar.classList.add('bg-yellow-500');
+            }
+        } else {
+            document.getElementById('storagePercentage').textContent = 'N/A';
+            document.getElementById('storageUsed').textContent = '-';
+            document.getElementById('storageAvailable').textContent = '-';
+            document.getElementById('storageTotal').textContent = '-';
+            document.getElementById('storageMount').textContent = 'Não disponível';
+        }
+
+        // Last update
+        if (metrics.timestamp) {
+            const date = new Date(metrics.timestamp);
+            document.getElementById('lastUpdate').textContent = date.toLocaleString('pt-BR');
+        }
+
+        loadingState.classList.add('hidden');
+        metricsContent.classList.remove('hidden');
+    } catch (error) {
+        console.error('Error loading metrics:', error);
+        loadingState.classList.add('hidden');
+        errorState.classList.remove('hidden');
+        errorMessage.textContent = error.message || 'Erro desconhecido';
+        metricsContent.classList.add('hidden');
+    } finally {
+        refreshBtn.disabled = false;
+    }
+}
+
+function refreshMetrics() {
+    loadMetrics();
+}
+
+// Auto-refresh every 5 seconds
+function startAutoRefresh() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+    }
+    autoRefreshInterval = setInterval(loadMetrics, 5000);
+}
+
+// Load metrics on page load
+document.addEventListener('DOMContentLoaded', () => {
+    loadMetrics();
+    startAutoRefresh();
+});
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+    }
+});
+</script>
+

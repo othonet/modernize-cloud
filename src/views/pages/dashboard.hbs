@@ -1,0 +1,300 @@
+<div class="w-full">
+    <!-- Header -->
+    <div class="mb-6 sm:mb-8">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0 mb-4">
+            <h1 class="text-2xl sm:text-3xl font-bold text-white">Meus Arquivos</h1>
+            <div class="flex flex-wrap gap-2 sm:gap-3">
+                <button id="selectionModeBtn" onclick="toggleSelectionMode()" class="btn-secondary flex items-center text-sm sm:text-base">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span class="hidden sm:inline">Selecionar</span>
+                    <span class="sm:hidden">Selecionar</span>
+                </button>
+                <button onclick="showCreateFolderModal()" class="btn-secondary flex items-center text-sm sm:text-base">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    <span class="hidden sm:inline">Nova Pasta</span>
+                    <span class="sm:hidden">Pasta</span>
+                </button>
+                
+                <!-- Botões Mobile (Câmera/Galeria) - aparecem apenas em mobile -->
+                <div id="mobileUploadButtons" class="flex gap-2 sm:hidden">
+                    <button onclick="handleCameraUpload()" class="btn-primary flex items-center text-sm" title="Tirar Foto">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        Foto
+                    </button>
+                    <button onclick="handleGalleryUpload()" class="btn-primary flex items-center text-sm" title="Escolher da Galeria">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        Galeria
+                    </button>
+                </div>
+                
+                <!-- Botão Desktop - aparece apenas em desktop -->
+                <label for="fileUpload" class="btn-primary cursor-pointer flex items-center hidden sm:flex">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    Enviar Arquivo
+                </label>
+                
+                <!-- Input file - funciona em ambos -->
+                <input type="file" id="fileUpload" multiple class="hidden" onchange="handleFileUpload(event)" accept="*/*">
+            </div>
+        </div>
+
+        <!-- Breadcrumb -->
+        <div id="breadcrumb" class="mb-3 flex items-center space-x-2 text-xs sm:text-sm py-2 overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
+            <!-- Breadcrumb será preenchido dinamicamente -->
+        </div>
+
+        <!-- Search -->
+        <div class="relative mb-6 sm:mb-8">
+            <input type="text" id="searchInput" placeholder="Buscar arquivos..." 
+                   class="input w-full pl-10 py-2.5 sm:py-2 text-base sm:text-sm" onkeyup="searchFiles()">
+            <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+        </div>
+    </div>
+
+    <!-- Upload Progress Container -->
+    <div id="uploadProgressContainer" class="mb-4 space-y-2" style="display: none;">
+        <!-- Upload progress items will be inserted here -->
+    </div>
+
+    <!-- Selection Bar -->
+    <div id="selectionBar" class="hidden fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 p-4 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <span id="selectionCount" class="text-white font-semibold">0 itens selecionados</span>
+                <button onclick="selectAll()" class="text-sm text-blue-400 hover:text-blue-300">Selecionar todos</button>
+                <button onclick="deselectAll()" class="text-sm text-gray-400 hover:text-gray-300">Limpar seleção</button>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="deleteSelected()" class="btn-danger flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    Deletar Selecionados
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs for My Files / Shared Files -->
+    <div class="mb-4 flex gap-2 border-b border-gray-700">
+        <button id="myFilesTab" onclick="switchTab('myFiles')" class="px-4 py-2 text-sm font-semibold text-blue-400 border-b-2 border-blue-400">
+            Meus Arquivos
+        </button>
+        <button id="sharedFilesTab" onclick="switchTab('sharedFiles')" class="px-4 py-2 text-sm font-semibold text-gray-400 hover:text-white border-b-2 border-transparent">
+            Compartilhados comigo
+        </button>
+    </div>
+
+    <!-- Files Grid -->
+    <div id="filesContainer" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+        <!-- Files will be loaded here -->
+    </div>
+    
+    <!-- Drop Zone Overlay -->
+    <div id="dropZoneOverlay" class="hidden fixed inset-0 bg-blue-600 bg-opacity-20 border-4 border-dashed border-blue-400 z-40 pointer-events-none flex items-center justify-center">
+        <div class="text-center">
+            <svg class="w-24 h-24 text-blue-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+            </svg>
+            <p class="text-2xl font-bold text-blue-300">Solte os arquivos aqui</p>
+            <p class="text-lg text-blue-400 mt-2">Os arquivos serão enviados para a cloud</p>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="hidden text-center py-12">
+        <div class="flex justify-center mb-4">
+            <svg class="w-24 h-24 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"></path>
+            </svg>
+        </div>
+        <p class="text-gray-400 text-lg">Nenhum arquivo encontrado</p>
+        <p class="text-gray-500 text-sm mt-2">Envie seu primeiro arquivo para começar</p>
+    </div>
+</div>
+
+<!-- Create Folder Modal -->
+<div id="folderModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-gray-800 rounded-lg sm:rounded-lg p-4 sm:p-6 w-full max-w-md border border-gray-700 max-h-[90vh] overflow-y-auto">
+        <h2 class="text-xl font-bold text-white mb-4">Nova Pasta</h2>
+        <input type="text" id="folderName" placeholder="Nome da pasta" class="input w-full mb-4">
+        
+        <!-- Color Picker -->
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-300 mb-2">Cor do ícone</label>
+            <div class="flex flex-wrap gap-2">
+                <button type="button" onclick="selectFolderColor('yellow-400')" class="folder-color-btn w-10 h-10 rounded-full bg-yellow-400 border-2 border-transparent hover:scale-110 transition-transform" data-color="yellow-400"></button>
+                <button type="button" onclick="selectFolderColor('blue-400')" class="folder-color-btn w-10 h-10 rounded-full bg-blue-400 border-2 border-transparent hover:scale-110 transition-transform" data-color="blue-400"></button>
+                <button type="button" onclick="selectFolderColor('green-400')" class="folder-color-btn w-10 h-10 rounded-full bg-green-400 border-2 border-transparent hover:scale-110 transition-transform" data-color="green-400"></button>
+                <button type="button" onclick="selectFolderColor('purple-400')" class="folder-color-btn w-10 h-10 rounded-full bg-purple-400 border-2 border-transparent hover:scale-110 transition-transform" data-color="purple-400"></button>
+                <button type="button" onclick="selectFolderColor('pink-400')" class="folder-color-btn w-10 h-10 rounded-full bg-pink-400 border-2 border-transparent hover:scale-110 transition-transform" data-color="pink-400"></button>
+                <button type="button" onclick="selectFolderColor('red-400')" class="folder-color-btn w-10 h-10 rounded-full bg-red-400 border-2 border-transparent hover:scale-110 transition-transform" data-color="red-400"></button>
+                <button type="button" onclick="selectFolderColor('indigo-400')" class="folder-color-btn w-10 h-10 rounded-full bg-indigo-400 border-2 border-transparent hover:scale-110 transition-transform" data-color="indigo-400"></button>
+                <button type="button" onclick="selectFolderColor('cyan-400')" class="folder-color-btn w-10 h-10 rounded-full bg-cyan-400 border-2 border-transparent hover:scale-110 transition-transform" data-color="cyan-400"></button>
+            </div>
+            <input type="hidden" id="folderColor" value="yellow-400">
+        </div>
+        
+        <div class="flex justify-end space-x-3">
+            <button onclick="closeFolderModal()" class="btn-secondary">Cancelar</button>
+            <button onclick="createFolder()" class="btn-primary">Criar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Rename Modal -->
+<div id="renameModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onclick="if(event.target === this) closeRenameModal()">
+    <div class="bg-gray-800 rounded-lg sm:rounded-lg p-4 sm:p-6 w-full max-w-md border border-gray-700">
+        <h2 id="renameTitle" class="text-xl font-bold text-white mb-4">Renomear</h2>
+        <input type="text" id="renameInput" class="input w-full mb-4" onkeydown="if(event.key === 'Enter') confirmRename()">
+        <div class="flex justify-end space-x-3">
+            <button onclick="closeRenameModal()" class="btn-secondary">Cancelar</button>
+            <button onclick="confirmRename()" class="btn-primary">Salvar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Change Color Modal -->
+<div id="changeColorModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onclick="if(event.target === this) closeChangeColorModal()">
+    <div class="bg-gray-800 rounded-lg sm:rounded-lg p-4 sm:p-6 w-full max-w-md border border-gray-700">
+        <h2 class="text-xl font-bold text-white mb-4">Alterar Cor da Pasta</h2>
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-300 mb-2">Escolha uma cor</label>
+            <div class="flex flex-wrap gap-2">
+                <button type="button" onclick="selectFolderColorForEdit('yellow-400')" class="folder-color-edit-btn w-10 h-10 rounded-full bg-yellow-400 border-2 border-transparent hover:scale-110 transition-transform" data-color="yellow-400"></button>
+                <button type="button" onclick="selectFolderColorForEdit('blue-400')" class="folder-color-edit-btn w-10 h-10 rounded-full bg-blue-400 border-2 border-transparent hover:scale-110 transition-transform" data-color="blue-400"></button>
+                <button type="button" onclick="selectFolderColorForEdit('green-400')" class="folder-color-edit-btn w-10 h-10 rounded-full bg-green-400 border-2 border-transparent hover:scale-110 transition-transform" data-color="green-400"></button>
+                <button type="button" onclick="selectFolderColorForEdit('purple-400')" class="folder-color-edit-btn w-10 h-10 rounded-full bg-purple-400 border-2 border-transparent hover:scale-110 transition-transform" data-color="purple-400"></button>
+                <button type="button" onclick="selectFolderColorForEdit('pink-400')" class="folder-color-edit-btn w-10 h-10 rounded-full bg-pink-400 border-2 border-transparent hover:scale-110 transition-transform" data-color="pink-400"></button>
+                <button type="button" onclick="selectFolderColorForEdit('red-400')" class="folder-color-edit-btn w-10 h-10 rounded-full bg-red-400 border-2 border-transparent hover:scale-110 transition-transform" data-color="red-400"></button>
+                <button type="button" onclick="selectFolderColorForEdit('indigo-400')" class="folder-color-edit-btn w-10 h-10 rounded-full bg-indigo-400 border-2 border-transparent hover:scale-110 transition-transform" data-color="indigo-400"></button>
+                <button type="button" onclick="selectFolderColorForEdit('cyan-400')" class="folder-color-edit-btn w-10 h-10 rounded-full bg-cyan-400 border-2 border-transparent hover:scale-110 transition-transform" data-color="cyan-400"></button>
+            </div>
+            <input type="hidden" id="editFolderColor" value="">
+        </div>
+        <div class="flex justify-end space-x-3">
+            <button onclick="closeChangeColorModal()" class="btn-secondary">Cancelar</button>
+            <button onclick="confirmChangeColor()" class="btn-primary">Salvar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Share with User Modal -->
+<div id="shareUserModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onclick="if(event.target === this) closeShareUserModal()">
+    <div class="bg-gray-800 rounded-lg sm:rounded-lg p-4 sm:p-6 w-full max-w-md border border-gray-700">
+        <h2 class="text-xl font-bold text-white mb-4">Compartilhar com Usuário</h2>
+        <p id="shareUserFileName" class="text-sm text-gray-400 mb-4"></p>
+        
+        <div class="mb-4">
+            <label for="shareUserSelect" class="block text-sm font-medium text-gray-300 mb-2">Selecionar Usuário</label>
+            <select id="shareUserSelect" class="input w-full">
+                <option value="">Carregando usuários...</option>
+            </select>
+        </div>
+        
+        <div id="shareUserError" class="hidden mb-4 p-3 bg-red-900 bg-opacity-50 border border-red-500 rounded-lg">
+            <p class="text-red-300 text-sm"></p>
+        </div>
+        
+        <div class="flex justify-end space-x-3">
+            <button onclick="closeShareUserModal()" class="btn-secondary">Cancelar</button>
+            <button onclick="confirmShareWithUser()" class="btn-primary">Compartilhar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Password Modal for Shared Files -->
+<div id="passwordModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onclick="if(event.target === this) closePasswordModal()">
+    <div class="bg-gray-800 rounded-lg sm:rounded-lg p-4 sm:p-6 w-full max-w-md border border-gray-700">
+        <h2 class="text-xl font-bold text-white mb-2">Senha Necessária</h2>
+        <p id="passwordModalFileName" class="text-sm text-gray-400 mb-4"></p>
+        <p class="text-sm text-gray-300 mb-4">Este arquivo compartilhado está protegido por senha</p>
+        
+        <div class="mb-4">
+            <label for="passwordInput" class="block text-sm font-medium text-gray-300 mb-2">Senha</label>
+            <input type="password" id="passwordInput" class="input w-full" placeholder="Digite a senha" onkeydown="if(event.key === 'Enter') confirmPassword()">
+        </div>
+        
+        <div id="passwordError" class="hidden mb-4 p-3 bg-red-900 bg-opacity-50 border border-red-500 rounded-lg">
+            <p class="text-red-300 text-sm"></p>
+        </div>
+        
+        <div class="flex justify-end space-x-3">
+            <button onclick="closePasswordModal()" class="btn-secondary">Cancelar</button>
+            <button onclick="confirmPassword()" class="btn-primary">Acessar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Move/Copy Modal -->
+<div id="moveCopyModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onclick="if(event.target === this) closeMoveCopyModal()">
+    <div class="bg-gray-800 rounded-lg sm:rounded-lg p-4 sm:p-6 w-full max-w-md border border-gray-700 max-h-[80vh] flex flex-col">
+        <h2 id="moveCopyTitle" class="text-xl font-bold text-white mb-2">Mover para</h2>
+        <p id="moveCopyItemName" class="text-sm text-gray-400 mb-4"></p>
+        
+        <!-- Toggle Move/Copy -->
+        <div class="mb-4 flex gap-2">
+            <button id="moveBtn" onclick="setMoveCopyAction('move')" class="flex-1 px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold transition-colors">
+                Mover
+            </button>
+            <button id="copyBtn" onclick="setMoveCopyAction('copy')" class="flex-1 px-4 py-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors">
+                Copiar
+            </button>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto mb-4">
+            <div id="moveCopyFolderTree" class="space-y-1">
+                <!-- Árvore de pastas será carregada aqui -->
+            </div>
+        </div>
+        <div class="flex justify-end space-x-3 pt-4 border-t border-gray-700">
+            <button onclick="closeMoveCopyModal()" class="btn-secondary">Cancelar</button>
+            <button id="moveCopyConfirmBtn" onclick="confirmMoveCopy()" class="btn-primary">Mover</button>
+        </div>
+    </div>
+</div>
+
+<!-- Media Viewer Modal -->
+<div id="mediaViewerModal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50" onclick="if(event.target === this) closeMediaViewer()">
+    <div class="relative max-w-7xl max-h-[90vh] w-full mx-4">
+        <!-- Close button -->
+        <button onclick="closeMediaViewer()" class="absolute top-4 right-4 z-50 bg-gray-800 hover:bg-gray-700 text-white rounded-full p-2 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+        
+        <!-- Download button -->
+        <button id="mediaDownloadBtn" onclick="downloadCurrentMedia()" class="absolute top-4 right-16 z-50 bg-gray-800 hover:bg-gray-700 text-white rounded-full p-2 transition-colors" title="Baixar">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+            </svg>
+        </button>
+        
+        <!-- File name -->
+        <div class="absolute top-4 left-4 z-50 bg-gray-800 bg-opacity-75 text-white px-4 py-2 rounded-lg">
+            <h3 id="mediaFileName" class="font-semibold text-lg"></h3>
+        </div>
+        
+        <!-- Media container -->
+        <div id="mediaContainer" class="flex items-center justify-center w-full h-full">
+            <!-- Content will be inserted here -->
+        </div>
+    </div>
+</div>
+
+<script src="/js/dashboard.js"></script>
+

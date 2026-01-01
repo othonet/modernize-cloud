@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="description" content="Cloud privada com sincronização ponto a ponto">
+    <meta name="theme-color" content="#3B82F6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Modernize Cloud">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <title>{{title}} - Modernize Cloud</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="/images/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/images/icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="96x96" href="/images/icon-96x96.png">
+    <link rel="apple-touch-icon" sizes="128x128" href="/images/icon-128x128.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/images/icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/images/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="/images/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="384x384" href="/images/icon-384x384.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="/images/icon-512x512.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/images/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/images/icon-512x512.png">
+    
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <!-- Capacitor (carrega apenas se disponível) -->
+    <script type="module" src="/js/capacitor-bridge.js"></script>
+    <!-- Mobile Enhancements (melhora UX mobile sem afetar desktop) -->
+    <script src="/js/mobile-enhancements.js"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+    {{#if user}}
+    <!-- Navigation -->
+    <nav class="bg-gray-800 border-b border-gray-700">
+        <div class="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
+            <div class="flex justify-between items-center min-h-[56px] sm:min-h-[64px] py-2 sm:py-0">
+                <div class="flex items-center flex-shrink-0">
+                    <a href="/" class="flex items-center space-x-1 sm:space-x-2 hover:opacity-80 transition-opacity">
+                        <svg class="w-6 h-6 sm:w-8 sm:h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"></path>
+                        </svg>
+                        <span class="text-base sm:text-xl font-bold text-white">Modernize Cloud</span>
+                    </a>
+                </div>
+                <div class="flex items-center flex-wrap gap-2 sm:gap-4">
+                    <!-- Botão de Instalação PWA removido (funcionalidade mantida no JavaScript) -->
+                    {{#if user.isAdmin}}
+                    <a href="/admin" class="btn-secondary text-sm flex items-center space-x-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                        </svg>
+                        <span>Admin</span>
+                    </a>
+                    {{/if}}
+                    <div class="flex items-center space-x-1 sm:space-x-2">
+                        <div class="w-7 h-7 sm:w-8 sm:h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                            <span class="text-xs sm:text-sm font-semibold">{{#if user.name}}{{substr user.name 0 1}}{{else}}{{substr user.email 0 1}}{{/if}}</span>
+                        </div>
+                        <span class="text-xs sm:text-sm hidden sm:inline">{{user.name}}</span>
+                    </div>
+                    <button onclick="logout()" class="btn-secondary text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2">
+                        <span class="hidden sm:inline">Sair</span>
+                        <span class="sm:hidden">S</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+    {{/if}}
+
+    <!-- Main Content -->
+    <main class="{{#if user}}max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8{{else}}min-h-screen{{/if}}">
+        {{{body}}}
+    </main>
+
+    <!-- Scripts -->
+    <script>
+        // Socket.IO connection
+        {{#if user}}
+        const socket = io({
+            auth: {
+                token: getCookie('sessionToken')
+            }
+        });
+
+        socket.on('connect', () => {
+            console.log('✅ Conectado ao servidor via Socket.IO');
+        });
+
+        socket.on('disconnect', () => {
+            console.warn('⚠️ Desconectado do servidor Socket.IO');
+        });
+
+        socket.on('connect_error', (error) => {
+            console.error('❌ Erro de conexão Socket.IO:', error);
+        });
+
+        socket.on('file:uploaded', (file) => {
+            console.log('Arquivo enviado:', file);
+            if (window.onFileUploaded) {
+                window.onFileUploaded(file);
+            }
+        });
+
+        socket.on('file:deleted', (data) => {
+            console.log('Arquivo deletado:', data);
+            if (window.onFileDeleted) {
+                window.onFileDeleted(data);
+            }
+        });
+
+        socket.on('folder:deleted', (data) => {
+            console.log('Pasta deletada:', data);
+            if (window.onFolderDeleted) {
+                window.onFolderDeleted(data);
+            }
+        });
+
+        socket.on('folder:created', (folder) => {
+            console.log('Pasta criada:', folder);
+            if (window.onFolderCreated) {
+                window.onFolderCreated(folder);
+            }
+        });
+
+        socket.on('file:updated', (file) => {
+            console.log('Arquivo atualizado:', file);
+            if (window.onFileUpdated) {
+                window.onFileUpdated(file);
+            }
+        });
+
+        socket.on('folder:updated', (folder) => {
+            console.log('Pasta atualizada:', folder);
+            if (window.onFolderUpdated) {
+                window.onFolderUpdated(folder);
+            }
+        });
+
+        socket.on('sync:event', (event) => {
+            console.log('Evento de sincronização:', event);
+            if (window.onSyncEvent) {
+                window.onSyncEvent(event);
+            }
+        });
+        {{/if}}
+
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        async function logout() {
+            try {
+                const response = await fetch('/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (response.ok) {
+                    window.location.href = '/auth/login';
+                }
+            } catch (error) {
+                console.error('Erro ao fazer logout:', error);
+            }
+        }
+    </script>
+    <script src="/js/app.js"></script>
+    <script src="/js/alerts.js"></script>
+    <script src="/js/share-utils.js"></script>
+    
+    <!-- Service Worker Registration e PWA Install Prompt -->
+    <script>
+        let deferredPrompt;
+        const installButton = document.getElementById('installButton');
+
+        // Função para verificar se PWA pode ser instalado
+        function checkPWAInstallability() {
+            // Verificar se já está instalado (standalone mode)
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                                 window.navigator.standalone ||
+                                 document.referrer.includes('android-app://');
+            
+            if (isStandalone) {
+                console.log('✅ PWA já está instalado');
+                if (installButton) {
+                    installButton.classList.add('hidden');
+                }
+                return false;
+            }
+
+            // Verificar se service worker está ativo
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistration().then(registration => {
+                    if (registration && registration.active) {
+                        console.log('✅ Service Worker está ativo');
+                        // No Brave, pode demorar um pouco para o beforeinstallprompt aparecer
+                        // Vamos verificar novamente após alguns segundos
+                        setTimeout(() => {
+                            if (!deferredPrompt && installButton) {
+                                // No Brave, mesmo sem o evento, podemos mostrar o botão como fallback
+                                // O usuário pode usar o menu do navegador
+                                const isBrave = navigator.userAgent.includes('Brave');
+                                if (isBrave) {
+                                    console.log('💡 Brave detectado - mostrando botão de instalação como fallback');
+                                    installButton.classList.remove('hidden');
+                                    installButton.title = 'Clique para ver instruções de instalação no Brave';
+                                } else {
+                                    console.log('⚠️ Aguardando evento beforeinstallprompt...');
+                                }
+                            }
+                        }, 5000); // Aguardar 5 segundos
+                    } else {
+                        console.log('⚠️ Service Worker ainda não está ativo');
+                    }
+                });
+            }
+
+            return true;
+        }
+
+        // Capturar o evento beforeinstallprompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('✅ PWA pode ser instalado - evento capturado');
+            console.log('Navegador:', navigator.userAgent);
+            // Prevenir o prompt automático
+            e.preventDefault();
+            // Guardar o evento para usar depois
+            deferredPrompt = e;
+            // Mostrar o botão de instalação
+            if (installButton) {
+                installButton.classList.remove('hidden');
+                console.log('✅ Botão de instalação exibido');
+            }
+        });
+
+        // Verificar se já está instalado
+        window.addEventListener('appinstalled', () => {
+            console.log('✅ PWA instalado com sucesso');
+            if (installButton) {
+                installButton.classList.add('hidden');
+            }
+            deferredPrompt = null;
+        });
+
+        // Verificar imediatamente
+        checkPWAInstallability();
+
+        // Verificar novamente após o carregamento completo
+        window.addEventListener('load', () => {
+            setTimeout(checkPWAInstallability, 1000);
+        });
+
+        // Botão de instalação
+        if (installButton) {
+            installButton.addEventListener('click', async () => {
+                if (!deferredPrompt) {
+                    console.log('⚠️ Prompt de instalação não disponível');
+                    console.log('💡 No Brave, tente: Menu (☰) > Mais ferramentas > Criar atalho...');
+                    // Fallback: instruções para instalação manual
+                    alert('Para instalar o app no Brave:\n\n1. Clique no menu (☰) no canto superior direito\n2. Selecione "Mais ferramentas"\n3. Escolha "Criar atalho..."\n4. Marque "Abrir como janela" e clique em "Criar"');
+                    return;
+                }
+
+                try {
+                    // Mostrar o prompt de instalação
+                    deferredPrompt.prompt();
+
+                    // Aguardar a resposta do usuário
+                    const { outcome } = await deferredPrompt.userChoice;
+                    console.log(`Usuário ${outcome === 'accepted' ? 'aceitou' : 'rejeitou'} a instalação`);
+
+                    // Limpar o prompt
+                    deferredPrompt = null;
+                    
+                    // Esconder o botão
+                    installButton.classList.add('hidden');
+                } catch (error) {
+                    console.error('Erro ao mostrar prompt de instalação:', error);
+                    alert('Erro ao instalar. Tente usar o menu do navegador: Menu > Mais ferramentas > Criar atalho...');
+                }
+            });
+        }
+
+        // Registrar service worker de forma não-bloqueante
+        if ('serviceWorker' in navigator) {
+            console.log('🔍 Service Worker suportado, iniciando registro...');
+            // Usar requestIdleCallback se disponível, senão setTimeout
+            const registerSW = () => {
+                console.log('📝 Tentando registrar Service Worker...');
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then((registration) => {
+                        console.log('✅ Service Worker registrado com sucesso:', registration.scope);
+                        console.log('📊 Status do Service Worker:', registration.active ? 'ATIVO' : 'INATIVO');
+                        
+                        // Verificar atualizações periodicamente (após um delay)
+                        setTimeout(() => {
+                            setInterval(() => {
+                                registration.update().catch(err => {
+                                    console.warn('Erro ao atualizar service worker:', err);
+                                });
+                            }, 60000); // A cada minuto
+                        }, 5000); // Aguardar 5 segundos antes de começar a verificar
+                        
+                        // Escutar atualizações
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            if (newWorker) {
+                                newWorker.addEventListener('statechange', () => {
+                                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                        // Nova versão disponível - não bloquear, apenas notificar
+                                        console.log('Nova versão do Service Worker disponível');
+                                        // Opcional: mostrar notificação não intrusiva
+                                    }
+                                });
+                            }
+                        });
+                    })
+                    .catch((error) => {
+                        console.warn('⚠️ Service Worker não pôde ser registrado (não crítico):', error);
+                        // Não bloquear a aplicação se o SW falhar
+                    });
+                
+                // Escutar mensagens do service worker
+                navigator.serviceWorker.addEventListener('message', (event) => {
+                    console.log('Mensagem do Service Worker:', event.data);
+                });
+            };
+            
+            // Registrar após o carregamento completo, mas não bloquear
+            if (window.requestIdleCallback) {
+                requestIdleCallback(registerSW, { timeout: 2000 });
+            } else {
+                setTimeout(registerSW, 100);
+            }
+        } else {
+            console.warn('⚠️ Service Worker não é suportado neste navegador');
+        }
+
+        // Log de diagnóstico após 2 segundos
+        setTimeout(() => {
+            console.log('🔍 Diagnóstico PWA:');
+            const swSupported = 'serviceWorker' in navigator;
+            console.log('- Service Worker suportado:', swSupported);
+            
+            if (!swSupported) {
+                console.warn('⚠️ Service Worker NÃO está disponível!');
+                console.warn('💡 Possíveis causas no Brave:');
+                console.warn('   1. Service Workers podem estar desabilitados');
+                console.warn('   2. Modo privado/incógnito ativo');
+                console.warn('   3. Site acessado via HTTP (não HTTPS)');
+                console.warn('   4. Extensões bloqueando Service Workers');
+                console.warn('');
+                console.warn('🔧 Soluções:');
+                console.warn('   - Verifique: brave://settings/privacy');
+                console.warn('   - Desative o modo privado se estiver ativo');
+                console.warn('   - Tente usar HTTPS ou localhost');
+                console.warn('   - O PWA ainda pode funcionar sem Service Worker, mas com funcionalidades limitadas');
+                
+                // Mostrar botão mesmo sem Service Worker (instalação manual)
+                const installBtn = document.getElementById('installButton');
+                if (installBtn) {
+                    installBtn.classList.remove('hidden');
+                    installBtn.title = 'Service Worker não disponível. Use o menu do navegador para instalar.';
+                }
+            } else {
+                navigator.serviceWorker.getRegistration().then(reg => {
+                    if (reg) {
+                        console.log('- Service Worker registrado:', reg.scope);
+                        console.log('- Service Worker ativo:', reg.active ? 'SIM' : 'NÃO');
+                    } else {
+                        console.log('- Service Worker: NÃO REGISTRADO');
+                    }
+                });
+            }
+            console.log('- Manifest link presente:', !!document.querySelector('link[rel="manifest"]'));
+            console.log('- Botão de instalação:', document.getElementById('installButton') ? 'ENCONTRADO' : 'NÃO ENCONTRADO');
+            console.log('- Protocolo:', window.location.protocol);
+            console.log('- Host:', window.location.host);
+        }, 2000);
+    </script>
+    
+    <!-- Alert System -->
+    <div id="alertContainer" class="fixed top-4 right-4 z-[9999] flex flex-col gap-3 max-w-md w-full pointer-events-none"></div>
+</body>
+</html>
+

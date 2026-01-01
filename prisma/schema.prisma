@@ -1,0 +1,153 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String?  @unique
+  username  String   @unique
+  password  String
+  name      String?
+  avatar    String?
+  isAdmin   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  files     File[]
+  folders   Folder[]
+  sessions  Session[]
+  sharedFiles FileShareUser[] @relation("SharedFiles")
+  sharedByMe FileShareUser[] @relation("SharedByMe")
+  
+  @@map("users")
+}
+
+model Session {
+  id          String   @id @default(uuid())
+  userId      String
+  token       String   @unique
+  expiresAt   DateTime
+  lastActivity DateTime @default(now()) @updatedAt
+  createdAt   DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("sessions")
+}
+
+model Folder {
+  id          String   @id @default(uuid())
+  name        String
+  path        String
+  parentId    String?
+  userId      String
+  color       String?  @default("yellow-400") // Cor do ícone da pasta
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent      Folder?  @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children    Folder[] @relation("FolderHierarchy")
+  files       File[]
+  syncEvents  SyncEvent[]
+  
+  @@unique([userId, path])
+  @@map("folders")
+}
+
+model File {
+  id          String   @id @default(uuid())
+  name        String
+  originalName String
+  path        String
+  size        BigInt
+  mimeType    String
+  folderId    String?
+  userId      String
+  hash        String?  // Para sincronização
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folder      Folder?  @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  syncEvents  SyncEvent[]
+  shares      FileShare[]
+  versions    FileVersion[]
+  sharedWith  FileShareUser[]
+  
+  @@unique([userId, path])
+  @@map("files")
+}
+
+model FileShareUser {
+  id          String   @id @default(uuid())
+  fileId      String
+  sharedWithUserId String
+  sharedByUserId   String
+  password    String?  // Hash da senha (opcional)
+  createdAt   DateTime @default(now())
+  
+  file        File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  sharedWith  User     @relation("SharedFiles", fields: [sharedWithUserId], references: [id], onDelete: Cascade)
+  sharedBy    User     @relation("SharedByMe", fields: [sharedByUserId], references: [id], onDelete: Cascade)
+  
+  @@unique([fileId, sharedWithUserId])
+  @@map("file_share_users")
+}
+
+model FileShare {
+  id          String   @id @default(uuid())
+  fileId      String
+  token       String   @unique
+  password    String?  // Hash da senha (opcional)
+  expiresAt   DateTime? // Data de expiração (opcional)
+  maxDownloads Int?    // Limite de downloads (opcional)
+  downloadCount Int    @default(0)
+  createdAt   DateTime @default(now())
+  
+  file        File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  
+  @@map("file_shares")
+}
+
+model FileVersion {
+  id          String   @id @default(uuid())
+  fileId      String
+  version     Int      // Número da versão (1, 2, 3...)
+  name        String
+  originalName String
+  path        String
+  size        BigInt
+  mimeType    String
+  hash        String?
+  createdAt   DateTime @default(now())
+  
+  file        File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  
+  @@unique([fileId, version])
+  @@map("file_versions")
+}
+
+model SyncEvent {
+  id          String   @id @default(uuid())
+  type        String   // 'upload', 'delete', 'update', 'move'
+  fileId      String?
+  folderId    String?
+  userId      String
+  metadata    String?  // JSON com dados adicionais
+  createdAt   DateTime @default(now())
+  
+  file        File?    @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  folder      Folder?  @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  
+  @@map("sync_events")
+}
+

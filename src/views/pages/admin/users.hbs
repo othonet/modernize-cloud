@@ -1,0 +1,132 @@
+<div class="w-full">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex items-center mb-4">
+            <a href="/admin" class="text-gray-400 hover:text-white mr-4 transition-colors" title="Voltar ao painel">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+            </a>
+            <div class="flex-1">
+                <h1 class="text-3xl font-bold text-white">Gerenciar Usuários</h1>
+                <p class="text-gray-400 mt-2">Gerencie os usuários que podem acessar a cloud privada</p>
+            </div>
+            <a href="/admin/users/new" class="btn-primary flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Novo Usuário
+            </a>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-700">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Usuário</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Email</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Arquivos</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Pastas</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Admin</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Criado em</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Ações</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-700">
+                    {{#each users}}
+                    <tr class="hover:bg-gray-750 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center mr-3">
+                                    <span class="text-sm font-semibold">{{#if name}}{{substr name 0 1}}{{else}}{{substr username 0 1}}{{/if}}</span>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-white">@{{username}}</div>
+                                    {{#if name}}
+                                    <div class="text-sm text-gray-400">{{name}}</div>
+                                    {{/if}}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-300">{{#if email}}{{email}}{{else}}<span class="text-gray-500 italic">Não informado</span>{{/if}}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-300">{{_count.files}}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-300">{{_count.folders}}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {{#if isAdmin}}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-900 text-purple-200">Admin</span>
+                            {{else}}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-700 text-gray-300">Usuário</span>
+                            {{/if}}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-400">{{formatDate createdAt}}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div class="flex justify-end space-x-2">
+                                <a href="/admin/users/{{id}}/edit" class="text-blue-400 hover:text-blue-300 transition-colors" title="Editar">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </a>
+                                <button onclick="deleteUser('{{id}}')" class="text-red-400 hover:text-red-300 transition-colors" title="Deletar">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {{else}}
+                    <tr>
+                        <td colspan="7" class="px-6 py-8 text-center text-gray-400">
+                            Nenhum usuário encontrado. <a href="/admin/users/new" class="text-blue-400 hover:text-blue-300">Criar primeiro usuário</a>
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+async function deleteUser(userId) {
+    showConfirm(
+        'Tem certeza que deseja deletar este usuário? Esta ação não pode ser desfeita e todos os arquivos e pastas do usuário serão removidos.',
+        async () => {
+            try {
+                const response = await fetch(`/admin/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showSuccess('Usuário deletado com sucesso!');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showError(result.error || 'Erro ao deletar usuário');
+                }
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                showError('Erro ao deletar usuário');
+            }
+        }
+    );
+}
+</script>
+
